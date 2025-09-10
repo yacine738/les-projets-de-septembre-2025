@@ -1,0 +1,25 @@
+.neon-square {
+  width: 100%;
+  height: 100%;
+  font-size: 10vw; /* scales nicely on screen */
+  font-weight: bold;
+  border-radius: 10px;
+  background: #000;
+  color: #0ff;
+  box-shadow:
+    0 0 5px #0ff,
+    0 0 15px #0ff inset;
+  user-select: none;
+
+  &:hover:enabled {
+    cursor: pointer;
+    color: #0f0;
+    box-shadow:
+      0 0 20px #0f0,
+      0 0 35px #0f0 inset;
+  }
+  &:disabled {
+    color: #222;
+    box-shadow: none;
+  }
+}

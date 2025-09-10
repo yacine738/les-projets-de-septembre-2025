@@ -1,0 +1,29 @@
+<nb-card class="neon-card">
+  <nb-card-header class="neon-header">
+    <h1>Tic Tac Toe</h1>
+    <button nbButton status="info" (click)="newGame()">Start New Game</button>
+  </nb-card-header>
+
+  <nb-card-body class="fullbody">
+    <div class="player-info" [ngClass]="{winner: winner}">
+      <span *ngIf="!winner">
+        Current Player:
+        <b [style.color]="player === 'X' ? '#0ff' : '#f0f'">{{ player }}</b>
+      </span>
+      <span *ngIf="winner">
+        Winner:
+        <b style="color:#0f0">{{ winner }}</b>!
+      </span>
+    </div>
+
+    <div class="board-grid">
+      <app-square
+        *ngFor="let square of squares; let i = index"
+        [value]="square"
+        (clicked)="makeMove(i)">
+      </app-square>
+    </div>
+  </nb-card-body>
+</nb-card>
+<nb-card-footer class="neon-footer">
+  <span>Developed by mohamed yassine souissi</span>

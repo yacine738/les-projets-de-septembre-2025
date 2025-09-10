@@ -1,0 +1,38 @@
+.neon-card {
+  width: 100vw;
+  height: 100vh;
+  box-sizing: border-box;
+  border-radius: 0; /* No rounding for fullscreen */
+  box-shadow: none; /* Remove shadow for fullscreen */
+  background: linear-gradient(
+    135deg,
+    #000000 0%,
+    #020b20 38%,
+    #001833 100%
+  ); /* Neon dark gradient for cool effect */
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  color: #0ff;
+  font-family: 'Orbitron', sans-serif;
+}
+.fullbody {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.board-grid {
+  flex-grow: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 24px;
+  height: 100%;
+}
+
+app-square {
+  width: 100%;
+  height: 100%;
+}
