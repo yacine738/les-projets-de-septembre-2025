@@ -1,0 +1,54 @@
+<div class="movie-list-container">
+  <h1>Movie Database</h1>
+  
+  <!-- Search Section -->
+  <div class="search-section">
+    <div class="search-bar">
+      <input 
+        type="text" 
+        [(ngModel)]="searchQuery" 
+        (keyup.enter)="searchMovies()"
+        placeholder="Search for movies..."
+        class="search-input"
+      >
+      <button (click)="searchMovies()" class="search-button">
+        Search
+      </button>
+      <button (click)="loadPopularMovies(); searchQuery = ''" class="clear-button">
+        Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading">
+    <p>Loading movies...</p>
+  </div>
+
+  <!-- Movies Grid -->
+  <div *ngIf="!loading" class="movies-grid">
+    <div *ngFor="let movie of movies" class="movie-card" (click)="viewMovieDetail(movie.id)">
+      <div class="movie-poster">
+        <img 
+          [src]="getImageUrl(movie.poster_path)" 
+          [alt]="movie.title"
+          onerror="this.src='https://via.placeholder.com/500x750?text=No+Image'"
+        >
+      </div>
+      <div class="movie-info">
+        <h3 class="movie-title">{{ movie.title }}</h3>
+        <p class="movie-year">{{ movie.release_date | date:'yyyy' }}</p>
+        <div class="movie-rating">
+          <span class="stars">{{ getRatingStars(movie.vote_average) }}</span>
+          <span class="rating-number">{{ movie.vote_average | number:'1.1-1' }}/10</span>
+        </div>
+        <p class="movie-overview">{{ movie.overview | slice:0:150 }}{{ movie.overview.length > 150 ? '...' : '' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Results -->
+  <div *ngIf="!loading && movies.length === 0" class="no-results">
+    <p>No movies found. Try a different search term.</p>
+  </div>
+</div>

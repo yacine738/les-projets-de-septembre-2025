@@ -1,0 +1,75 @@
+<div class="movie-detail-container">
+  <!-- Back Button -->
+  <button (click)="goBack()" class="back-button">
+    ← Back to Movies
+  </button>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <p>Loading movie details...</p>
+  </div>
+
+  <!-- Movie Not Found -->
+  <div *ngIf="!loading && !movie" class="not-found">
+    <h2>Movie not found</h2>
+    <p>The requested movie could not be found.</p>
+  </div>
+
+  <!-- Movie Details -->
+  <div *ngIf="!loading && movie" class="movie-detail">
+    <div class="movie-hero">
+      <div class="movie-backdrop" [style.background-image]="'url(' + getImageUrl(movie.backdrop_path) + ')'">
+        <div class="movie-content">
+          <div class="movie-poster">
+            <img 
+              [src]="getImageUrl(movie.poster_path)" 
+              [alt]="movie.title"
+              onerror="this.src='https://via.placeholder.com/500x750?text=No+Image'"
+            >
+          </div>
+          <div class="movie-info">
+            <h1 class="movie-title">{{ movie.title }}</h1>
+            <div class="movie-meta">
+              <span class="release-year">{{ movie.release_date | date:'yyyy' }}</span>
+              <span class="original-language">{{ movie.original_language | uppercase }}</span>
+            </div>
+            <div class="movie-rating">
+              <span class="stars">{{ getRatingStars(movie.vote_average) }}</span>
+              <span class="rating-number">{{ movie.vote_average | number:'1.1-1' }}/10</span>
+              <span class="vote-count">({{ movie.vote_count }} votes)</span>
+            </div>
+            <div class="movie-popularity">
+              <strong>Popularity:</strong> {{ movie.popularity | number:'1.1-1' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="movie-details">
+      <div class="overview-section">
+        <h2>Overview</h2>
+        <p class="overview">{{ movie.overview }}</p>
+      </div>
+      
+      <div class="details-grid">
+        <div class="detail-item">
+          <strong>Original Title:</strong>
+          <span>{{ movie.original_title }}</span>
+        </div>
+        <div class="detail-item">
+          <strong>Release Date:</strong>
+          <span>{{ movie.release_date | date:'fullDate' }}</span>
+        </div>
+        <div class="detail-item">
+          <strong>Language:</strong>
+          <span>{{ movie.original_language | uppercase }}</span>
+        </div>
+        <div class="detail-item">
+          <strong>Adult Content:</strong>
+          <span>{{ movie.adult ? 'Yes' : 'No' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
