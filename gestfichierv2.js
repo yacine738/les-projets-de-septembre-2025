@@ -2,6 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const zlib = require('zlib');
+const { pipeline } = require('stream');
+const { promisify } = require('util');
+const pipelineAsync = promisify(pipeline);
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -30,6 +33,7 @@ function cd(newDir) {
   updatePrompt();
 }
 
+// Compression synchrone
 function compressGzipSync(inputFile) {
   const inputPath = path.join(currentDir, inputFile);
   const outputPath = inputPath + '.gz';
@@ -39,6 +43,7 @@ function compressGzipSync(inputFile) {
   console.log(`Fichier compressé en gzip : ${inputFile}.gz`);
 }
 
+// Compression callback
 function compressGzipCallback(inputFile, cb) {
   const inputPath = path.join(currentDir, inputFile);
   const outputPath = inputPath + '.gz';
@@ -51,6 +56,7 @@ function compressGzipCallback(inputFile, cb) {
   });
 }
 
+// Compression promesse async
 async function compressGzipPromise(inputFile) {
   const inputPath = path.join(currentDir, inputFile);
   const outputPath = inputPath + '.gz';
@@ -65,6 +71,23 @@ async function compressGzipPromise(inputFile) {
   console.log(`Fichier compressé en gzip : ${inputFile}.gz`);
 }
 
+// Compression stream avec pipeline
+async function compressGzipStream(inputFile) {
+  const inputPath = path.join(currentDir, inputFile);
+  const outputPath = inputPath + '.gz';
+  const input = fs.createReadStream(inputPath);
+  const output = fs.createWriteStream(outputPath);
+  const gzip = zlib.createGzip();
+  try {
+    await pipelineAsync(input, gzip, output);
+    console.log(`Fichier compressé en gzip (stream) : ${inputFile}.gz`);
+  } catch (err) {
+    console.log('Erreur compression stream:', err.message);
+  }
+  updatePrompt();
+}
+
+// Commandes synchrones
 const syncCommands = {
   new: (filename) => {
     const filePath = path.join(currentDir, filename);
@@ -125,6 +148,7 @@ const syncCommands = {
   }
 };
 
+// Commandes callback
 function callbackCommands(command, args) {
   const filePath = (name) => path.join(currentDir, name);
 
@@ -207,6 +231,7 @@ function callbackCommands(command, args) {
   }
 }
 
+// Commandes promesse async
 async function promiseCommands(command, args) {
   const filePath = (name) => path.join(currentDir, name);
   try {
@@ -252,12 +277,156 @@ async function promiseCommands(command, args) {
   updatePrompt();
 }
 
+// Commandes stream
+const streamCommands = {
+  read: (filename) => {
+    const filePath = path.join(currentDir, filename);
+    const rlFile = readline.createInterface({
+      input: fs.createReadStream(filePath),
+      crlfDelay: Infinity
+    });
+    rlFile.on('line', (line) => {
+      console.log(line);
+    });
+    rlFile.on('close', () => {
+      updatePrompt();
+    });
+    rlFile.on('error', (err) => {
+      console.log('Erreur lecture stream:', err.message);
+      updatePrompt();
+    });
+  },
+
+  cp: async (src, dest) => {
+    const srcPath = path.join(currentDir, src);
+    const destPath = path.join(currentDir, dest);
+    const readable = fs.createReadStream(srcPath);
+    const writable = fs.createWriteStream(destPath);
+    try {
+      await pipelineAsync(readable, writable);
+      console.log(`Copié ${src} vers ${dest} (stream)`);
+    } catch (err) {
+      console.log('Erreur copie stream:', err.message);
+    }
+    updatePrompt();
+  },
+
+  zip: async (filename) => {
+    const inputPath = path.join(currentDir, filename);
+    const outputPath = inputPath + '.gz';
+    const input = fs.createReadStream(inputPath);
+    const output = fs.createWriteStream(outputPath);
+    const gzip = zlib.createGzip();
+
+    try {
+      await pipelineAsync(input, gzip, output);
+      console.log(`Fichier compressé en gzip (stream) : ${filename}.gz`);
+    } catch (err) {
+      console.log('Erreur compression stream:', err.message);
+    }
+    updatePrompt();
+  },
+
+  new: (filename) => {
+    const filePath = path.join(currentDir, filename);
+    const writable = fs.createWriteStream(filePath);
+    writable.end('');
+    writable.on('finish', () => {
+      console.log(`Fichier créé : ${filename} (stream)`);
+      updatePrompt();
+    });
+    writable.on('error', (err) => {
+      console.log('Erreur création stream:', err.message);
+      updatePrompt();
+    });
+  },
+
+  write: (filename, content) => {
+    const filePath = path.join(currentDir, filename);
+    const writable = fs.createWriteStream(filePath);
+    writable.write(content);
+    writable.end();
+    writable.on('finish', () => {
+      console.log(`Ecrit dans ${filename} (stream)`);
+      updatePrompt();
+    });
+    writable.on('error', (err) => {
+      console.log('Erreur écriture stream:', err.message);
+      updatePrompt();
+    });
+  },
+
+  del: (filename) => {
+    const filePath = path.join(currentDir, filename);
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.log('Erreur suppression stream:', err.message);
+      } else {
+        console.log(`Supprimé ${filename}`);
+      }
+      updatePrompt();
+    });
+  },
+
+  mv: (src, dest) => {
+    const srcPath = path.join(currentDir, src);
+    const destPath = path.join(currentDir, dest);
+    fs.rename(srcPath, destPath, (err) => {
+      if (err) {
+        console.log('Erreur déplacement stream:', err.message);
+      } else {
+        console.log(`Déplacé ${src} vers ${dest} (stream)`);
+      }
+      updatePrompt();
+    });
+  },
+
+  rename: (oldName, newName) => {
+    const oldPath = path.join(currentDir, oldName);
+    const newPath = path.join(currentDir, newName);
+    fs.rename(oldPath, newPath, (err) => {
+      if (err) {
+        console.log('Erreur renommage stream:', err.message);
+      } else {
+        console.log(`Renommé ${oldName} en ${newName} (stream)`);
+      }
+      updatePrompt();
+    });
+  },
+
+  ls: () => {
+    fs.readdir(currentDir, (err, files) => {
+      if (err) {
+        console.log('Erreur ls:', err.message);
+        updatePrompt();
+        return;
+      }
+      let pending = files.length;
+      if (pending === 0) {
+        updatePrompt();
+        return;
+      }
+      files.forEach(file => {
+        const fullPath = path.join(currentDir, file);
+        fs.stat(fullPath, (err, stats) => {
+          if (!err) {
+            console.log(stats.isDirectory() ? `[DIR] ${file}` : file);
+          } else {
+            console.log(file);
+          }
+          if (--pending === 0) updatePrompt();
+        });
+      });
+    });
+  }
+};
+
 function changeMode(newMode) {
-  if (['sy', 'ca', 'pr'].includes(newMode)) {
+  if (['sy', 'ca', 'pr', 'st'].includes(newMode)) {
     mode = newMode;
     console.log(`Mode changé en ${mode}`);
   } else {
-    console.log('Mode invalide. Utiliser sy, ca ou pr');
+    console.log('Mode invalide. Utiliser sy, ca, pr ou st');
   }
   updatePrompt();
 }
@@ -283,6 +452,13 @@ rl.on('line', async (input) => {
       callbackCommands(command, args);
     } else if (mode === 'pr') {
       await promiseCommands(command, args);
+    } else if (mode === 'st') {
+      if (streamCommands[command]) {
+        streamCommands[command](...args);
+      } else {
+        console.log('Commande inconnue');
+        updatePrompt();
+      }
     } else {
       console.log('Mode inconnu.');
       updatePrompt();
